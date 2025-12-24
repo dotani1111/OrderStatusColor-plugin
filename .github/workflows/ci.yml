@@ -1,0 +1,96 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - '*'
+    tags:
+      - '*'
+    paths:
+      - '**'
+      - '!*.md'
+  pull_request:
+    paths:
+      - '**'
+      - '!*.md'
+
+jobs:
+  test:
+    name: PHPUnit Tests (PHP ${{ matrix.php-version }}, ${{ matrix.database }})
+    runs-on: ubuntu-latest
+    
+    strategy:
+      matrix:
+        php-version: ['8.1', '8.3']
+        ec-cube-version: ['4.3']
+        database: ['mysql', 'postgresql']
+    
+    steps:
+      - name: Checkout plugin repository
+        uses: actions/checkout@v6
+        with:
+          path: plugin
+
+      - name: Checkout EC-CUBE
+        uses: actions/checkout@v6
+        with:
+          repository: EC-CUBE/ec-cube
+          ref: ${{ matrix.ec-cube-version }}
+          path: eccube
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ matrix.php-version }}
+          extensions: mbstring, intl, pdo_mysql, pdo_pgsql, curl, zip, opcache
+          coverage: none
+
+      - name: Setup MySQL
+        if: matrix.database == 'mysql'
+        uses: shogo82148/actions-setup-mysql@v1
+        with:
+          mysql-version: '8.0'
+          root-password: 'root'
+          database: 'eccube_test'
+
+      - name: Setup PostgreSQL
+        if: matrix.database == 'postgresql'
+        uses: shogo82148/actions-setup-postgres@v1
+        with:
+          postgres-version: '15'
+          postgres-user: 'postgres'
+          postgres-password: 'postgres'
+          postgres-db: 'eccube_test'
+
+      - name: Install EC-CUBE dependencies
+        working-directory: eccube
+        run: |
+          composer install --no-progress --no-suggest --prefer-dist --optimize-autoloader --no-interaction
+
+      - name: Install plugin
+        run: |
+          mkdir -p eccube/app/Plugin/OrderStatusColor42
+          # プラグインリポジトリのルートがそのままプラグインディレクトリの場合
+          # .githubディレクトリと.gitディレクトリは除外
+          find plugin -mindepth 1 -maxdepth 1 ! -name '.github' ! -name '.git' -exec cp -r {} eccube/app/Plugin/OrderStatusColor42/ \;
+
+      - name: Run PHPUnit tests
+        working-directory: eccube
+        env:
+          APP_ENV: 'test'
+          DATABASE_URL: ${{ matrix.database == 'mysql' && 'mysql://root:root@127.0.0.1:3306/eccube_test' || 'postgresql://postgres:postgres@127.0.0.1:5432/eccube_test' }}
+          DATABASE_SERVER_VERSION: ${{ matrix.database == 'mysql' && '8.0' || '15' }}
+          DATABASE_CHARSET: ${{ matrix.database == 'mysql' && 'utf8mb4' || 'UTF8' }}
+          MAILER_URL: 'smtp://127.0.0.1:1025'
+        run: |
+          vendor/bin/phpunit app/Plugin/OrderStatusColor42/tests/
+
+      - name: Upload logs
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: plugin-test-php${{ matrix.php-version }}-${{ matrix.database }}-logs
+          path: eccube/var/log/
+          retention-days: 7
+          if-no-files-found: ignore
+

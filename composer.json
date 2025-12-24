@@ -1,0 +1,16 @@
+{
+  "name": "ec-cube/orderstatuscolor42",
+  "version": "1.0.0",
+  "description": "受注一覧ステータス色分けプラグイン",
+  "type": "eccube-plugin",
+  "license": [
+    "GPL-2.0-only",
+    "proprietary"
+  ],
+  "require": {
+    "ec-cube/plugin-installer": "~0.0.7 || ^2.0"
+  },
+  "extra": {
+    "code": "OrderStatusColor42"
+  }
+}

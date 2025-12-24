@@ -1,0 +1,127 @@
+<script>
+/**
+ * 受注一覧ステータス色分けプラグイン
+ * 各行の背景色をステータス色に変更する
+ */
+(function() {
+    'use strict';
+
+    // プラグイン設定データ（グローバル変数を使用しない）
+    var statusColors = {{ statusColors|json_encode|raw }};
+    var shippingIdToStatusIdMap = {{ shippingIdToStatusIdMap|json_encode|raw }};
+    var opacity = {{ opacity|json_encode|raw }};
+
+    /**
+     * HEX色をRGBに変換
+     * @param {string} hex - HEX色コード（例: #FF0000）
+     * @returns {Object} RGB値 {r, g, b}
+     */
+    function hexToRgb(hex) {
+        // #を削除
+        hex = hex.replace('#', '');
+        
+        // 3桁の場合は6桁に変換
+        if (hex.length === 3) {
+            hex = hex.split('').map(function(char) {
+                return char + char;
+            }).join('');
+        }
+        
+        var result = /^([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+        return result ? {
+            r: parseInt(result[1], 16),
+            g: parseInt(result[2], 16),
+            b: parseInt(result[3], 16)
+        } : null;
+    }
+
+    /**
+     * 行の背景色を設定
+     */
+    function applyStatusColors() {
+        // ステータス色データと透明度が定義されているか確認
+        if (!statusColors || typeof opacity === 'undefined') {
+            console.warn('OrderStatusColor42: ステータス色データが定義されていません');
+            return;
+        }
+
+        // チェックボックスのID（check_1000形式）から直接行を取得
+        // チェックボックスから親要素（tr）を取得する方式（テーブル構造に依存）
+        var checkboxes = document.querySelectorAll('input[type="checkbox"][id^="check_"]');
+        
+        checkboxes.forEach(function(checkbox) {
+            // IDからShipping.idを抽出（check_1000 → 1000）
+            var checkboxId = checkbox.getAttribute('id');
+            var shippingId = null;
+            
+            if (checkboxId && checkboxId.startsWith('check_')) {
+                shippingId = parseInt(checkboxId.substring(6), 10); // 'check_'.length = 6
+            }
+            
+            // data-id属性もフォールバックとして確認
+            if (!shippingId) {
+                shippingId = parseInt(checkbox.getAttribute('data-id'), 10);
+            }
+            
+            if (!shippingId) return;
+            
+            // チェックボックスから親要素（tr）を取得
+            var row = null;
+            if (checkbox.closest) {
+                // モダンブラウザ対応
+                row = checkbox.closest('tr');
+            } else {
+                // 古いブラウザ対応（親要素を遡る）
+                var parent = checkbox.parentElement;
+                while (parent && parent.tagName !== 'TR') {
+                    parent = parent.parentElement;
+                }
+                row = parent;
+            }
+            
+            if (!row) return;
+            
+            // Shipping.id → OrderStatus.id のマッピングからステータスIDを取得
+            var statusId = null;
+            if (shippingIdToStatusIdMap && shippingIdToStatusIdMap[shippingId]) {
+                statusId = shippingIdToStatusIdMap[shippingId];
+            }
+            
+            if (statusId && statusColors[statusId]) {
+                var color = statusColors[statusId];
+                var rgb = hexToRgb(color);
+                if (rgb) {
+                    // 既存のスタイルを保持しつつ、背景色を追加
+                    var existingStyle = row.getAttribute('style') || '';
+                    var newStyleValue = '--bs-table-accent-bg: rgba(' + rgb.r + ', ' + rgb.g + ', ' + rgb.b + ', ' + opacity + ');';
+                    
+                    // 既存の--bs-table-accent-bgを削除（存在する場合）
+                    var updatedStyle = existingStyle.replace(/--bs-table-accent-bg:\s*[^;]+;?\s*/g, '');
+                    
+                    // 既存のスタイルを整理（先頭・末尾の空白とセミコロンを調整）
+                    updatedStyle = updatedStyle.trim();
+                    if (updatedStyle && !updatedStyle.endsWith(';')) {
+                        updatedStyle += '; ';
+                    } else if (updatedStyle) {
+                        updatedStyle += ' ';
+                    }
+                    
+                    // 新しいスタイルを追加
+                    row.setAttribute('style', updatedStyle + newStyleValue);
+                }
+            }
+        });
+    }
+
+    // DOMContentLoaded時に実行
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', function() {
+            setTimeout(applyStatusColors, 100);
+        });
+    } else {
+        // 既に読み込み済みの場合は少し待ってから実行（テーブルが動的に読み込まれる場合があるため）
+        setTimeout(applyStatusColors, 500);
+    }
+})();
+</script>
+

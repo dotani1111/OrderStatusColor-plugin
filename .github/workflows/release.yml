@@ -1,0 +1,23 @@
+
+name: Packaging for EC-CUBE Plugin
+on:
+  release:
+    types: [ published ]
+jobs:
+  deploy:
+    name: Build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Packaging
+        run: |
+          git archive HEAD --format=tar.gz > ../${{ github.event.repository.name }}-${{ github.event.release.tag_name }}.tar.gz
+      - name: Upload binaries to release of TGZ
+        uses: svenstaro/upload-release-action@v1-release
+        with:
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          file: ${{ runner.workspace }}/${{ github.event.repository.name }}-${{ github.event.release.tag_name }}.tar.gz
+          asset_name: ${{ github.event.repository.name }}-${{ github.event.release.tag_name }}.tar.gz
+          tag: ${{ github.ref }}
+          overwrite: true

@@ -1,0 +1,29 @@
+受注一覧ステータス色分けプラグイン（OrderStatusColor42）のライセンスについて
+
+本プラグインのライセンスはデュアルライセンス方式を採用しています。
+無償で利用できるオープンソースのライセンス『GPL ライセンス』をそのまま使用するか、
+有償の『商用ライセンス』を選択する事ができます。
+
+本プラグインを頒布する場合に、ソースコードを開示したくない場合には
+（GPLライセンスに準拠しない場合）、商用ライセンスが必要となります。
+
+ライセンスに関して詳しくはEC-CUBE公式サイトをご確認下さい。
+http://www.ec-cube.net/license/business.php
+
+---
+
+[GPL-2.0-only]
+本プラグインは、GNU General Public License version 2.0（GPL-2.0）の下で
+配布される場合があります。GPL-2.0の全文は以下のURLで確認できます：
+https://www.gnu.org/licenses/gpl-2.0.html
+
+[商用ライセンス]
+ソースコードを開示せずに配布する場合は、EC-CUBEの商用ライセンスが必要です。
+詳細はEC-CUBE公式サイトをご確認ください：
+http://www.ec-cube.net/license/business.php
+
+---
+
+Copyright (c) [Your Name/Company]
+All Rights Reserved.
+
