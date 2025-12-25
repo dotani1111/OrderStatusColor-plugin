@@ -42,7 +42,7 @@ EC-CUBE 4系プラグイン「受注一覧ステータス色分けプラグイ�
 ### 必要な環境
 
 - PHP 8.1以上
-- EC-CUBE 4.0.x以上
+- EC-CUBE 4.2.x 〜 4.3.x
 - Composer
 
 ### テスト
@@ -60,11 +60,11 @@ GitHub Actionsで自動テストが実行されます。
 
 ## ライセンス
 
-LGPL または 独自ライセンス
+GPL-2.0-only または proprietary
 
 ## 作者
 
-[Your Name]
+dotani1111
 
 ## サポート
 
