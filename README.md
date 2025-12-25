@@ -48,7 +48,7 @@ EC-CUBE 4系プラグイン「受注一覧ステータス色分けプラグイ�
 ### テスト
 
 ```bash
-php vendor/bin/phpunit app/Plugin/OrderStatusColor42/tests/
+php vendor/bin/phpunit app/Plugin/OrderStatusColor42/Tests/
 ```
 
 ### CI/CD

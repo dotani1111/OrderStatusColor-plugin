@@ -25,6 +25,34 @@ jobs:
         ec-cube-version: ['4.3']
         database: ['mysql', 'postgresql']
     
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: root
+          MYSQL_DATABASE: eccube_test
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=3
+
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: eccube_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd="pg_isready -U postgres"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=3
+    
     steps:
       - name: Checkout plugin repository
         uses: actions/checkout@v6
@@ -45,23 +73,6 @@ jobs:
           extensions: mbstring, intl, pdo_mysql, pdo_pgsql, curl, zip, opcache
           coverage: none
 
-      - name: Setup MySQL
-        if: matrix.database == 'mysql'
-        uses: shogo82148/actions-setup-mysql@v1
-        with:
-          mysql-version: '8.0'
-          root-password: 'root'
-          database: 'eccube_test'
-
-      - name: Setup PostgreSQL
-        if: matrix.database == 'postgresql'
-        uses: shogo82148/actions-setup-postgres@v1
-        with:
-          postgres-version: '15'
-          postgres-user: 'postgres'
-          postgres-password: 'postgres'
-          postgres-db: 'eccube_test'
-
       - name: Install EC-CUBE dependencies
         working-directory: eccube
         run: |
@@ -74,6 +85,19 @@ jobs:
           # .githubディレクトリと.gitディレクトリは除外
           find plugin -mindepth 1 -maxdepth 1 ! -name '.github' ! -name '.git' -exec cp -r {} eccube/app/Plugin/OrderStatusColor42/ \;
 
+      - name: Setup database schema
+        working-directory: eccube
+        env:
+          APP_ENV: 'test'
+          DATABASE_URL: ${{ matrix.database == 'mysql' && 'mysql://root:root@127.0.0.1:3306/eccube_test' || 'postgresql://postgres:postgres@127.0.0.1:5432/eccube_test' }}
+          DATABASE_SERVER_VERSION: ${{ matrix.database == 'mysql' && '8.0' || '15' }}
+          DATABASE_CHARSET: ${{ matrix.database == 'mysql' && 'utf8mb4' || 'UTF8' }}
+          MAILER_URL: 'smtp://127.0.0.1:1025'
+        run: |
+          php bin/console doctrine:database:create --if-not-exists
+          php bin/console doctrine:schema:create
+          php bin/console eccube:fixtures:load
+
       - name: Run PHPUnit tests
         working-directory: eccube
         env:
@@ -83,11 +107,11 @@ jobs:
           DATABASE_CHARSET: ${{ matrix.database == 'mysql' && 'utf8mb4' || 'UTF8' }}
           MAILER_URL: 'smtp://127.0.0.1:1025'
         run: |
-          vendor/bin/phpunit app/Plugin/OrderStatusColor42/tests/
+          vendor/bin/phpunit --exclude-group cache-clear,cache-clear-install,update-schema-doctrine,plugin-service app/Plugin/OrderStatusColor42/Tests/
 
       - name: Upload logs
         if: failure()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: plugin-test-php${{ matrix.php-version }}-${{ matrix.database }}-logs
           path: eccube/var/log/

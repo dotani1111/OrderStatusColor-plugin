@@ -55,8 +55,8 @@ class EventTest extends AbstractAdminWebTestCase
         // SQLite対応のため、先に削除してから挿入
         $connection->executeStatement('DELETE FROM mtb_order_status_color WHERE id = ?', [$statusId]);
         $connection->executeStatement(
-            'INSERT INTO mtb_order_status_color (id, name) VALUES (?, ?)',
-            [$statusId, $testColor]
+            'INSERT INTO mtb_order_status_color (id, name, sort_no, discriminator_type) VALUES (?, ?, ?, ?)',
+            [$statusId, $testColor, $statusId, 'orderstatuscolor']
         );
 
         // Eventインスタンスを作成
@@ -151,8 +151,8 @@ class EventTest extends AbstractAdminWebTestCase
         // SQLite対応のため、先に削除してから挿入
         $connection->executeStatement('DELETE FROM mtb_order_status_color WHERE id = ?', [$statusId]);
         $connection->executeStatement(
-            'INSERT INTO mtb_order_status_color (id, name) VALUES (?, ?)',
-            [$statusId, $invalidColor]
+            'INSERT INTO mtb_order_status_color (id, name, sort_no, discriminator_type) VALUES (?, ?, ?, ?)',
+            [$statusId, $invalidColor, $statusId, 'orderstatuscolor']
         );
 
         // Eventインスタンスを作成
@@ -302,8 +302,8 @@ class EventTest extends AbstractAdminWebTestCase
         // SQLite対応のため、先に削除してから挿入
         $connection->executeStatement('DELETE FROM mtb_order_status_color WHERE id = ?', [$statusId]);
         $connection->executeStatement(
-            'INSERT INTO mtb_order_status_color (id, name) VALUES (?, ?)',
-            [$statusId, $colorWithoutHash]
+            'INSERT INTO mtb_order_status_color (id, name, sort_no, discriminator_type) VALUES (?, ?, ?, ?)',
+            [$statusId, $colorWithoutHash, $statusId, 'orderstatuscolor']
         );
 
         // Eventインスタンスを作成
