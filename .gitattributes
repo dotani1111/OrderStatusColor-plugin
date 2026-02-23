@@ -2,3 +2,4 @@
 /.github                    export-ignore
 /.gitignore                 export-ignore
 /Tests                      export-ignore
+/doc                        export-ignore
